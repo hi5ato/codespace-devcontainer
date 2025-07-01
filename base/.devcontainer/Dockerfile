@@ -27,3 +27,7 @@ RUN if [ "$VARIANT" = "noble" ] || [ "$VARIANT" = "oracular" ]; then \
     fi
 
 RUN chsh -s /usr/bin/fish root
+
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash -   && \
+    apt-get install -y nodejs && \
+    apt-get clean
