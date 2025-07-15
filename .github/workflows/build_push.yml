@@ -1,44 +1,59 @@
 # build devcontainer and push to ghcr.io
 on:
-  workflow_dispatch: {}
-  push: {}
-  schedule:
-    - cron: '0 0 * * 0'
+    workflow_dispatch: {}
+    push: {}
+    schedule:
+        - cron: "0 0 * * 0"
+
+permissions:
+    contents: read
+    packages: write
 
 jobs:
-  build-and-push:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    steps:
+    build-and-push:
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - name: Checkout (GitHub)
+              uses: actions/checkout@v4
 
-    - name: Checkout (GitHub)
-      uses: actions/checkout@v3
-          
-    - name: Login to GitHub Container Registry
-      uses: docker/login-action@v2 
-      with:
-        registry: ghcr.io
-        username: ${{ github.repository_owner }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
 
-    - name: Pre-build dev container image base
-      uses: devcontainers/ci@v0.3
-      with:
-        subFolder: base
-        imageName: ghcr.io/hi5ato/codespace-devcontainer-base
-        # cacheFrom: ghcr.io/hi5ato/codespace-devcontainer-base
-        noCache: true
-        push: filter
-        refFilterForPush: "refs/heads/main"
+            - name: Login to GitHub Container Registry
+              uses: docker/login-action@v3
+              with:
+                registry: ghcr.io
+                username: ${{ github.repository_owner }}
+                password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Pre-build dev container image brew
-      uses: devcontainers/ci@v0.3
-      with:
-        subFolder: with-brew
-        imageName: ghcr.io/hi5ato/codespace-devcontainer
-        # cacheFrom: ghcr.io/hi5ato/codespace-devcontainer
-        noCache: true
-        push: filter
-        refFilterForPush: "refs/heads/main"
+            - name: Restore cache
+              uses: actions/cache@v4
+              with:
+                path: /tmp/docker-cache
+                key: devcontainer-cache-${{ runner.os }}-${{ hashFiles('base/.devcontainer/**') }}
+                restore-keys: |
+                  devcontainer-cache-${{ runner.os }}-
+
+            # - name: Pre-build dev container image base debug
+            #   uses: devcontainers/ci@v0.3
+            #   with:
+            #     subFolder: debug
+            #     imageName: ghcr.io/hi5ato/mydevcontainer-debug
+            #     cacheTo: type=gha,mode=max
+            #     push: always
+
+            - name: Pre-build dev container image
+              uses: devcontainers/ci@v0.3
+              with:
+                subFolder: base
+                imageName: ghcr.io/hi5ato/codespace-devcontainer
+                noCache: ${{ github.event_name == 'schedule' }}
+                push: always
+                cacheFrom: type=local,src=/tmp/docker-cache
+                cacheTo: type=local,dest=/tmp/docker-cache-new,mode=max
+
+            - name: Move cache
+              run: |
+                rm -rf /tmp/docker-cache
+                mv /tmp/docker-cache-new /tmp/docker-cache
