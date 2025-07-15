@@ -18,12 +18,6 @@ RUN apt-get install -y --no-install-recommends \
     aptitude less ugrep fzf bat fd-find vim moreutils htop lsof lv lftp zip unzip ncat socat ssh-import-id sudo iputils-ping \
     && apt-get clean
 
-RUN if id "ubuntu" &>/dev/null; then \
-        echo "Deleting user 'ubuntu'  for $VARIANT" && userdel -f -r ubuntu || echo "Failed to delete ubuntu user for $VARIANT"; \  
-    else \
-        echo "User 'ubuntu' does not exist for $VARIANT"; \ 
-    fi
-
 # USERNAME for uid 1000
 ARG USERNAME=codespace
 RUN if id "ubuntu" &>/dev/null; then \
