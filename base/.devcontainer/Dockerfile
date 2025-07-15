@@ -48,8 +48,6 @@ ENV PATH="/home/linuxbrew/.linuxbrew/bin:${PATH}"
 RUN echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
 RUN eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"; brew doctor && brew install lazygit fish git-credential-oauth
 
-ADD ./ubuntu.sources /home/${USERNAME}
-
 USER root
 RUN chsh -s /home/linuxbrew/.linuxbrew/bin/fish ${USERNAME}
 
