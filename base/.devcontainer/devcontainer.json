@@ -12,7 +12,7 @@
 			"installZsh": false,
 			// "userUid": "1000",
 			// "userGid": "1000",
-			"username": "codespace"
+			// "username": "codespace"
 		},
 		"ghcr.io/devcontainers/features/docker-in-docker:2": {
 			"moby": true,
